@@ -14,14 +14,14 @@ threshold = st.number_input("Aurora intensity threshold:", min_value=0, max_valu
 if st.button("Check Aurora"):
     if city and email:
         st.info(f"Fetching data for {city}...")
-        
+
         coords = get_city_coordinates(city)
         if not coords:
             st.error("Could not find coordinates for this city.")
         else:
             aurora_value = fetch_aurora_data(coords)
             st.write(f"Aurora intensity forecast: {aurora_value}")
-            
+
             if check_threshold(aurora_value, threshold):
                 send_notification(email, city, aurora_value)
                 st.success("Aurora alert sent! Check your email 🌟")
