@@ -1,2 +1,2 @@
 # AuroraPulse
-Get instant alerts when the aurora dances above your city, never miss the northern lights again!
+Catch the aurora before it fades—alerts that keep you in the glow!

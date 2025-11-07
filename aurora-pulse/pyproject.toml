@@ -1,0 +1,12 @@
+[project]
+name = "aurora-pulse"
+version = "0.1.0"
+description = "Catch the aurora before it fades—alerts that keep you in the glow!"
+authors = [
+    { name = "Shreayan Chaudhary", email = "shreayan98c@gmail.com" }
+]
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "streamlit>=1.50.0",
+]
