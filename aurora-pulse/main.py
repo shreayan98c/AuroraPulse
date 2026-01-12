@@ -5,9 +5,8 @@ from geopy.geocoders import Nominatim
 from loguru import logger
 from src.backend.db import save_subscription
 from src.backend.fetch_data import load_aurora_points
-from src.backend.nearest_neighbour import find_nearest_coord
+from src.backend.nearest_neighbour import check_threshold, find_nearest_coord
 from src.backend.notifier import send_notification
-from src.backend.process_data import check_threshold
 from streamlit_folium import st_folium
 
 st.set_page_config(page_title="Aurora Pulse", page_icon="🌌", layout="centered")
@@ -51,7 +50,7 @@ if not st.session_state.coords and not st.session_state.toast_shown:
 
 # Create map
 center = [0, 0]  # default center
-zoom = 1
+zoom = 2
 
 if st.session_state.coords:
     center = [

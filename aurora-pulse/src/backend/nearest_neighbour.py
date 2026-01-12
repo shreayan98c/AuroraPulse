@@ -1,4 +1,5 @@
 import numpy as np
+from loguru import logger
 from sklearn.neighbors import BallTree
 
 
@@ -17,7 +18,9 @@ def haversine(lat1, lon1, lat2, lon2) -> float:
     dlat = lat2 - lat1
     dlon = lon2 - lon1
     a = np.sin(dlat / 2) ** 2 + np.cos(lat1) * np.cos(lat2) * np.sin(dlon / 2) ** 2
-    return 2 * R * np.arcsin(np.sqrt(a))
+    c = 2 * R * np.arcsin(np.sqrt(a))
+    logger.debug(f"Haversine distance: {c} km")
+    return c
 
 
 def find_nearest_coord(target_coord, coord_list):
@@ -46,21 +49,20 @@ def find_nearest_coord(target_coord, coord_list):
 
     # Build BallTree
     tree = BallTree(coords_rad, metric="haversine")
+    logger.debug("BallTree built with haversine metric.")
 
     # Query nearest neighbor
     dist, idx = tree.query(target_rad, k=1)
 
     nearest_coord = coords[idx[0][0]]
     distance_km = dist[0][0] * 6371.0  # convert to km
+    logger.debug(f"Nearest coordinate: {nearest_coord}, Distance (km): {distance_km}")
 
     return nearest_coord, distance_km
 
 
-if __name__ == "__main__":
-    # Your target coordinate (latitude, longitude)
-    target = np.array([0, -85])
-
-    nearest_coord, distance = find_nearest_coord(target, [[10, -80, 5], [0, -86, 10], [-5, -90, 15], [20, -70, 8]])
-    print("Nearest coordinate:", nearest_coord)
-    print("Distance (km):", distance)
-    print("Aurora intensity at nearest coordinate:", nearest_coord[2])
+def check_threshold(aurora_value, threshold):
+    """
+    Returns True if aurora_value exceeds threshold
+    """
+    return aurora_value >= threshold

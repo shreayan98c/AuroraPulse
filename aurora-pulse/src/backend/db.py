@@ -3,6 +3,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import List, Optional
 
+from loguru import logger
+
 DB_PATH = "aurora_subscriptions.db"  # file will be created in your app folder
 
 
@@ -42,6 +44,7 @@ def init_db():
     )
     conn.commit()
     conn.close()
+    logger.info("Database initialized.")
 
 
 # Save or update a subscription
@@ -82,6 +85,7 @@ def save_subscription(user_email: str, user_name: str, latitude: float, longitud
 
     conn.commit()
     conn.close()
+    logger.info(f"Subscription saved/updated for {user_email} at ({latitude}, {longitude})")
 
 
 # Fetch all subscriptions
@@ -127,6 +131,7 @@ def update_last_alert_sent(sub_id: int, alert_time: datetime):
     )
     conn.commit()
     conn.close()
+    logger.info(f"Last alert sent updated for subscription ID {sub_id} at {alert_time.isoformat()}")
 
 
 # Initialize DB on module load
