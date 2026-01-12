@@ -29,13 +29,3 @@ def get_city_coordinates(city_name):
     else:
         logger.warning(f"Could not find coordinates for {city_name}.")
         return None
-
-
-if __name__ == "__main__":
-    # Test the function
-    city = "Reykjavik"
-    coords = get_city_coordinates(city)
-    if coords:
-        logger.info(f"Coordinates of {city}: {coords}")
-    else:
-        logger.warning(f"Could not find coordinates for {city}.")

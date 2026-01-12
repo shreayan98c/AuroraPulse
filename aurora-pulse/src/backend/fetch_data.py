@@ -1,3 +1,5 @@
+import json
+
 import requests
 from loguru import logger
 
@@ -43,3 +45,17 @@ def fetch_realtime_aurora_data():
     else:
         logger.error(f"Failed to fetch aurora data: {response.status_code}")
         return None
+
+
+def load_aurora_points(filepath="aurora_data.json"):
+    """
+    Returns list of [lat, lon, intensity]
+    """
+    with open(filepath, "r") as f:
+        data = json.load(f)
+
+    points = []
+    for lon, lat, intensity in data["coordinates"]:
+        points.append([lat, lon, intensity])
+
+    return points
