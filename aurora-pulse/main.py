@@ -118,7 +118,7 @@ if st.button("Check Aurora", disabled=not st.session_state.coords):
         )
         st.success("Subscription saved! You will get email alerts automatically.")
 
-        aurora_points = load_aurora_points("aurora_data.json")
+        aurora_points = load_aurora_points()
         nearest_point, distance_km = find_nearest_coord(
             target_coord=[
                 st.session_state.coords["lat"],
