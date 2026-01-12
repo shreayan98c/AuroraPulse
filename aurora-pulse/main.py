@@ -14,9 +14,6 @@ st.title("Aurora Chaser 🌌")
 
 # Authentication
 if not st.user.is_logged_in:
-    # st.markdown("### 🔐 Login required")
-    # st.button("Log in with Google", on_click=st.login)
-    # st.stop()
     if st.button("Log in with Google"):
         st.login()
     st.stop()
@@ -102,8 +99,10 @@ if st.session_state.coords:
         st.warning("Unknown Location selected!")
 
 
+user_name = st.user.name or "Aurora Chaser"
+first_name = user_name.split()[0] if user_name else "Aurora Chaser"
 email = st.user.email
-threshold = st.number_input("Aurora intensity threshold:", min_value=0, max_value=10, value=8)
+threshold = st.number_input("Aurora intensity threshold:", min_value=0, max_value=20, value=8)
 if st.button("Check Aurora", disabled=not st.session_state.coords):
     if st.session_state.city and email:
         logger.info(f"Fetching data for {st.session_state.city}...")
@@ -126,7 +125,7 @@ if st.button("Check Aurora", disabled=not st.session_state.coords):
 
         if check_threshold(aurora_value, threshold):
             st.write(f"🌌 Nearest aurora point:\n- Distance: {distance_km:.1f} km\n- Aurora intensity: {aurora_value}")
-            send_notification(email, st.session_state.city, aurora_value)
+            send_notification(email=email, name=first_name, city=st.session_state.city, aurora_value=aurora_value)
             st.success("Aurora alert sent! Check your email 🌟")
         else:
             st.info("Aurora below threshold. No notification sent.")
