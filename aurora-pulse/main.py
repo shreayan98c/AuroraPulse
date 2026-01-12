@@ -3,6 +3,7 @@ import streamlit as st
 from geopy.extra.rate_limiter import RateLimiter
 from geopy.geocoders import Nominatim
 from loguru import logger
+from src.backend.db import save_subscription
 from src.backend.fetch_data import load_aurora_points
 from src.backend.nearest_neighbour import find_nearest_coord
 from src.backend.notifier import send_notification
@@ -107,6 +108,16 @@ if st.button("Check Aurora", disabled=not st.session_state.coords):
     if st.session_state.city and email:
         logger.info(f"Fetching data for {st.session_state.city}...")
         logger.info(f"Coordinates: {st.session_state.coords}")
+
+        save_subscription(
+            user_email=email,
+            user_name=first_name,
+            latitude=st.session_state.coords["lat"],
+            longitude=st.session_state.coords["lng"],
+            city=st.session_state.city,
+            threshold=threshold,
+        )
+        st.success("Subscription saved! You will get email alerts automatically.")
 
         aurora_points = load_aurora_points("aurora_data.json")
         nearest_point, distance_km = find_nearest_coord(
