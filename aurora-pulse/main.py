@@ -12,6 +12,26 @@ from streamlit_folium import st_folium
 st.set_page_config(page_title="Aurora Pulse", page_icon="🌌", layout="centered")
 st.title("Aurora Chaser 🌌")
 
+# Authentication
+if not st.user.is_logged_in:
+    # st.markdown("### 🔐 Login required")
+    # st.button("Log in with Google", on_click=st.login)
+    # st.stop()
+    if st.button("Log in with Google"):
+        st.login()
+    st.stop()
+
+if st.button("Log out"):
+    st.logout()
+st.markdown(f"Welcome! {st.user.name}")
+
+
+# Optional: show user info + logout
+with st.sidebar:
+    st.markdown(f"👋 **{st.user.name}**")
+    st.markdown(f"📧 {st.user.email}")
+    st.button("Log out", on_click=st.logout)
+
 # Reverse geocoder
 geolocator = Nominatim(user_agent="aurora_pulse_app")
 reverse = RateLimiter(geolocator.reverse, min_delay_seconds=1)
@@ -82,7 +102,7 @@ if st.session_state.coords:
         st.warning("Unknown Location selected!")
 
 
-email = "shreayan98c@gmail.com"
+email = st.user.email
 threshold = st.number_input("Aurora intensity threshold:", min_value=0, max_value=10, value=8)
 if st.button("Check Aurora", disabled=not st.session_state.coords):
     if st.session_state.city and email:
