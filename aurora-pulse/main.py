@@ -23,7 +23,7 @@ if st.button("Log out"):
 st.markdown(f"Welcome! {st.user.name}")
 
 
-# Optional: show user info + logout
+# Show user info + logout
 with st.sidebar:
     st.markdown(f"👋 **{st.user.name}**")
     st.markdown(f"📧 {st.user.email}")

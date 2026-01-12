@@ -5,7 +5,7 @@ from typing import List, Optional
 
 from loguru import logger
 
-DB_PATH = "aurora_subscriptions.db"  # file will be created in your app folder
+from .config import DB_PATH
 
 
 # Data model for a subscription
