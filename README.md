@@ -1,30 +1,58 @@
 # 🌌 AuroraPulse
 
-**Aurora Pulse** is your ultimate companion for chasing the Northern Lights. This web app provides **real-time aurora alerts** based on your location and preferred aurora intensity thresholds, so you never miss a magical aurora display. Catch the aurora before it fades—alerts that keep you in the glow!
+**Catch the aurora before it fades—alerts that keep you in the glow!** 
 
-Built with **Streamlit**, **Folium**, and **Python**, Aurora Pulse combines geospatial visualization, NOAA aurora data, and personalized notifications to create an intuitive aurora-chasing experience.
+Aurora Pulse is a **real-time aurora alert system** built with **Streamlit**. Users can subscribe to aurora notifications for specific locations and thresholds, and receive alerts via **email** when aurora activity meets their criteria. The app is designed with **scalable architecture**, **pub/sub background processing**, and **geospatial intelligence** for accurate nearest-neighbor aurora calculations. Catch the aurora before it fades—alerts that keep you in the glow!
 
 ---
 
 ## ✨ Features
 
-- **Interactive Map:** Click any location on the map to set your aurora alert location.
-- **Aurora Intensity Thresholds:** Receive alerts only when aurora intensity meets your chosen threshold.
-- **Personalized Notifications:** Get HTML emails addressed to your first name with aurora details.
-- **Automated Updates:** Aurora data is fetched automatically from NOAA whenever a request is made and the data is older than 3 hours.
-- **Subscription Management:** Save your email, location, and threshold to receive automated alerts.
-- **Nearest Aurora Detection:** Finds the closest aurora forecast point to your location using accurate geospatial calculations.
-- **Extensible & Modular:** Clean backend structure for fetching data, sending notifications, and database management.
+- **Real-time Aurora Data**: Fetches latest aurora oval data from [NOAA Data API](https://www.swpc.noaa.gov/content/data-access) and caches it for efficiency.
+- **Geospatial Intelligence**:
+  - Finds nearest aurora points for user locations using **Haversine distance** and **BallTree**.
+  - Supports custom intensity thresholds for alerts.
+- **User Subscriptions & Notifications**:
+  - Users can save multiple subscriptions.
+  - Alerts are sent via **HTML-rich email** notifications.
+- **Background Processing**:
+  - Uses **Redis + RQ (Redis Queue)** for background tasks.
+  - Ensures **non-blocking** alert checks.
+  - Avoids sending alerts too frequently (rate-limiting by `MIN_ALERT_GAP`).
+- **OAuth Integration**:
+  - **Google SSO** for secure authentication.
+  - Session management and personalized greetings.
+- **Scalable Architecture Design Decisions**:
+  - **Redis + RQ over APScheduler**:  
+    APScheduler runs tasks in-process, which can block the Streamlit app for multiple users. Redis + RQ allows **distributed workers**, retries, and fault tolerance.
+  - **Pub/Sub Pattern**: Background worker subscribes to the "aurora" queue, enabling scalable notifications to many users.
+  - **Streamlit caching**: Aurora data and map computations are cached for **performance optimization**.
+- **Extensible Notification System**:
+  - Email support with SMTP (configurable).
+  - SMS notification stub for future integration.
 
 ---
 
+## 🏗 Architecture Overview
+
+![View Architecture](aurora-pulse/architecture.svg)
+
+**Key design decisions**:
+
+- **Redis + RQ**: Enables asynchronous, distributed task execution, retries, and future horizontal scaling.
+- **SQLite for dev / Postgres recommended for prod**: Simple local testing, but ready for production-grade DB.
+- **Streamlit caching**: Reduces repeated API calls and heavy computation.
+- **Haversine + BallTree**: Efficient nearest-neighbor queries for geospatial aurora intensity mapping.
+- **Pub/Sub Pattern**: Decouples background processing from frontend requests.
+
+---
 ## 🛠️ Tech Stack
 
 - **Python 3.12+**
 - **Streamlit** for the web UI
 - **Folium** for interactive maps
 - **SQLite** for storing subscriptions
-- **APScheduler** for background jobs (optional)
+- **Redis + RQ** for background jobs and task queue
 - **scikit-learn** for nearest-neighbor calculations
 - **Loguru** for structured logging
 - **NOAA OVATION API** for real-time aurora data
@@ -33,23 +61,30 @@ Built with **Streamlit**, **Folium**, and **Python**, Aurora Pulse combines geos
 ---
 
 ## 📦 Project Structure
+
 ```
 aurora-pulse/
+├── src/
+│   ├── backend/
+│   │   ├── config.py
+│   │   ├── db.py                   # SQLite DB setup & subscription management
+│   │   ├── fetch_data.py           # Fetch aurora data & caching
+│   │   ├── nearest_neighbour.py    # Distance calculations, threshold checks
+│   │   ├── notifier.py             # Email/SMS notifications
+│   │   ├── redis_handler/
+│   │   │   ├── redis_conn.py       # Redis connection setup
+│   │   │   ├── rq_tasks.py         # RQ task definitions
+│   │   │   └── rq_worker.py        # RQ worker to process background jobs
+│   │   ├── simple_apscheduler.py   # APScheduler setup (deprecated)
+│   ├── frontend/
+├── tests/                          # Unit tests for backend modules
 │
-├─ main.py # Streamlit app entrypoint
-├─ pyproject.toml # Python project and dependencies
-├─ aurora_data.json # Cached aurora data
-│
-├─ src/
-│ ├─ backend/
-│ │ ├─ db.py # SQLite DB setup & subscription management
-│ │ ├─ fetch_data.py # Fetch aurora data & caching
-│ │ ├─ nearest_neighbour.py # Distance calculations, threshold checks
-│ │ ├─ notifier.py # Email/SMS notifications
-│ │ └─ scheduler.py # Background job scheduler (optional)
-│
-├─ tests/ # Unit tests for all components
-├─ Dockerfile # Docker container setup
+├─ main.py                          # Streamlit app entrypoint
+├─ pyproject.toml                   # Python project and dependencies
+├─ aurora_data.json                 # Cached aurora data
+├─ secrets.toml                     # Template for secrets configuration
+├─ Dockerfile                       # Docker Image setup
+├─ docker-compose.yml               # Docker Compose setup
 └─ README.md
 ```
 
@@ -57,11 +92,16 @@ aurora-pulse/
 
 ## 🚀 Installation
 
-### Clone the repo:
+### Prerequisites
+- Python ≥ 3.12
+- [uv](https://pypi.org/project/uv/) (for package management)
+- Redis (local or remote)
+- SMTP email account (Gmail / SendGrid / SES)
 
+### Clone the repo:
 ```bash
-git clone https://github.com/yourusername/aurora-pulse.git
-cd aurora-pulse
+git clone https://github.com/shreayan98c/AuroraPulse.git
+cd AuroraPulse/aurora-pulse
 ```
 
 ### Install dependencies:
@@ -73,7 +113,7 @@ uv sync
 ---
 
 ## ⚙️ Configuration
-1. Secrets: Copy secrets.toml.template to secrets.toml and fill in your credentials.
+Secrets: Fill in your credentials and place them in `.streamlit/secrets.toml`.
 ```toml
 [auth]
 redirect_uri = "http://localhost:8501/oauth2callback"
@@ -89,9 +129,22 @@ sender_email = "<your_email_here>"
 app_password = "<your_app_password_here>"
 ```
 
-2. Aurora Data Cache: aurora_data.json will be automatically created and refreshed when needed.
-
 ## 🖥️ Running Locally
+### Start Redis server
+Start a local Redis server or connect to a remote Redis instance.
+```bash
+redis-server
+```
+Or connect to a cloud Redis instance using REDIS_URL env variable.
+
+### Start RQ Worker
+In a separate terminal, start the RQ worker to process background jobs:
+```bash
+uv run python -m src.backend.redis_handler.rq_worker
+```
+
+### Run the Streamlit app
+In another terminal, start the Streamlit app:
 ```bash
 uv run streamlit run main.py
 ```
@@ -99,21 +152,53 @@ Open your browser at http://localhost:8501 to start using the app.
 
 ---
 
-## 📬 Notifications
-
-- Aurora alerts are sent as beautifully formatted HTML emails.
-- Emails include your first name, selected location, aurora intensity, and tips for observing the Northern Lights.
-
----
-
 ## 🧪 Testing
-
 All components are covered by unit tests:
 ```bash
 uv run pytest tests/ --maxfail=1 -v
 ```
-- tests/test_db.py → Tests DB creation, subscription saving, and alert updates.
-- tests/test_fetch_data.py → Tests fetching and parsing aurora data.
-- tests/test_notifier.py → Tests email sending and formatting.
 
 ---
+
+## 🗄 Database
+- Uses SQLite by default (DB_PATH in config.py).
+- For production, migrate to PostgreSQL.
+- Tables:
+    - subscriptions: stores user info, location, threshold, and last alert timestamp.
+
+---
+
+## 📡 Aurora Data
+- Aurora oval data fetched from NOAA OVATION API.
+- Cached for 5 minutes using @st.cache_data.
+- Stored locally in aurora_data.json for fast retrieval.
+
+---
+
+## 🛰 Geospatial Calculations
+- Uses Haversine distance for great-circle computation.
+- BallTree from scikit-learn for fast nearest-neighbor queries.
+- Efficiently finds closest aurora point to a user’s selected coordinates.
+
+---
+
+## 📧 Notifications
+- Email notifications sent via SMTP with HTML formatting.
+- Alerts respect MIN_ALERT_GAP (default: 1 hour) to prevent spam.
+- SMS notification stub for future integration.
+
+---
+
+## 🔒 Authentication
+
+- Google OAuth2 SSO
+- Secures access to the app.
+- Streamlit session management tracks logged-in users and their subscriptions.
+
+---
+
+## 🌐 Future Improvements
+
+- Add real SMS notification integration.
+- Multi-user rate-limiting and monitoring dashboard.
+- Improve UI with dynamic markers, animations, and responsive layout.
