@@ -1,0 +1,47 @@
+version: "3.9"
+
+services:
+  # Redis service
+  redis:
+    image: redis:7-alpine
+    container_name: aurora-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+
+  # Streamlit app
+  app:
+    build: .
+    container_name: aurora-app
+    ports:
+      - "8501:8501"
+    environment:
+      REDIS_URL: "redis://redis:6379/0" # points to the Redis service
+      PYTHONUNBUFFERED: 1
+      PYTHONDONTWRITEBYTECODE: 1
+      STREAMLIT_SERVER_HEADLESS: "true"
+      STREAMLIT_SERVER_ENABLECORS: "false"
+    volumes:
+      - .:/app # Mount local code for hot reload
+    depends_on:
+      - redis
+    command: streamlit run main.py
+
+  # RQ worker
+  worker:
+    build: .
+    container_name: aurora-worker
+    environment:
+      REDIS_URL: "redis://redis:6379/0"
+      PYTHONUNBUFFERED: 1
+      PYTHONDONTWRITEBYTECODE: 1
+    volumes:
+      - .:/app
+    depends_on:
+      - redis
+    command: uv run python -m src.backend.redis_handler.rq_worker
+
+volumes:
+  redis-data:
