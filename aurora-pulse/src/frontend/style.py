@@ -21,3 +21,14 @@ def set_background(image_path: str):
         """,
         unsafe_allow_html=True,
     )
+    st.markdown(
+        f"""
+        <style>
+        .stApp {{
+            background: url("{image_path}") no-repeat center center fixed;
+            background-size: cover;
+        }}
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )

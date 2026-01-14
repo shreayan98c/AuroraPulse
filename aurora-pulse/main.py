@@ -3,10 +3,13 @@ import streamlit as st
 from geopy.extra.rate_limiter import RateLimiter
 from geopy.geocoders import Nominatim
 from loguru import logger
-from src.backend.db import get_all_subscriptions, save_subscription
+from rq import Queue
+from src.backend.db import get_all_subscriptions, remove_subscription, save_subscription
 from src.backend.fetch_data import load_aurora_points
 from src.backend.nearest_neighbour import check_threshold, find_nearest_coord
 from src.backend.notifier import send_notification
+from src.backend.redis_handler.redis_conn import redis_conn
+from src.backend.redis_handler.rq_tasks import check_aurora_alerts
 from src.frontend.style import set_background
 from streamlit_folium import st_folium
 
@@ -20,6 +23,8 @@ if not st.user.is_logged_in:
     if st.button("Log in with Google"):
         st.login()
     st.stop()
+
+q = Queue("aurora", connection=redis_conn)
 
 user_name = st.user.name or "Aurora Chaser"
 first_name = user_name.split()[0] if user_name else "Aurora Chaser"
@@ -41,9 +46,9 @@ with st.sidebar:
             with st.expander(f"{sub.city} (Threshold: {sub.threshold})", expanded=False):
                 st.write(f"📍 Latitude: {sub.latitude:.2f}, Longitude: {sub.longitude:.2f}")
                 st.write(f"⏱ Last Alert Sent: {sub.last_alert_sent or 'Never'}")
-                # Optional: Delete subscription
+                # Delete subscription
                 if st.button(f"❌ Remove {sub.city}", key=sub.id):
-                    # call remove_subscription(sub.id)
+                    remove_subscription(sub.id)
                     st.success(f"{sub.city} removed!")
     else:
         st.info("No subscriptions yet. Select a location to start receiving alerts.")
@@ -84,9 +89,11 @@ m = folium.Map(location=center, zoom_start=zoom)
 if st.session_state.coords:
     popup_text = f"City: {st.session_state.city}" if st.session_state.city else "Selected Location"
 
-    folium.Marker(
-        location=center, popup=popup_text, icon=folium.CustomIcon("assets/aurora_icon.png", icon_size=(30, 30))
-    ).add_to(m)
+    # folium.Marker(
+    #     location=center, popup=popup_text, icon=folium.CustomIcon("assets/aurora_icon.png", icon_size=(30, 30))
+    # ).add_to(m)  # looks a little out of place
+
+    folium.Marker(location=center, popup=popup_text, icon=folium.Icon(color="darkblue", icon="info-sign")).add_to(m)
 
 # Render map
 map_data = st_folium(m, width=725, height=400)
@@ -132,11 +139,9 @@ elif threshold >= 8:
     st.caption("🌌 Moderate sensitivity: Alerts for moderate auroras.")
 else:
     st.caption("✨ Low sensitivity: Alerts for any aurora activity.")
+
 if st.button("Check Aurora", disabled=not st.session_state.coords):
     if st.session_state.city and email:
-        logger.info(f"Fetching data for {st.session_state.city}...")
-        logger.info(f"Coordinates: {st.session_state.coords}")
-
         save_subscription(
             user_email=email,
             user_name=first_name,
@@ -145,42 +150,13 @@ if st.button("Check Aurora", disabled=not st.session_state.coords):
             city=st.session_state.city,
             threshold=threshold,
         )
-        st.toast("Subscription saved! You will get email alerts automatically.")
 
-        with st.spinner("Fetching latest aurora data..."):
-            aurora_points = load_aurora_points()
-        nearest_point, distance_km = find_nearest_coord(
-            target_coord=[
-                st.session_state.coords["lat"],
-                st.session_state.coords["lng"],
-            ],
-            coord_list=aurora_points,
+        # Enqueue background job for redis worker
+        q.enqueue(
+            check_aurora_alerts,
+            job_timeout=300,
+            result_ttl=0,
         )
 
-        nearest_lat, nearest_lon, aurora_value = nearest_point
-        logger.info(
-            f"Nearest aurora data point at ({nearest_lat}, {nearest_lon}) with value {aurora_value}, distance {distance_km:.2f} km"
-        )
-
-        if check_threshold(aurora_value, threshold):
-            # st.progress(min(aurora_value / 20, 1.0))
-            # st.caption(
-            #     f"🌌 Nearest aurora point:\n- Distance: {distance_km:.1f} km\n- Aurora intensity: {aurora_value}"
-            # )
-            st.markdown(
-                f"""
-            <div style="background-color:#12172b;padding:20px;border-radius:12px;color:#ffffff;">
-                <p><strong>Location:</strong> {st.session_state.city}</p>
-                <p><strong>Aurora Intensity:</strong> {aurora_value}</p>
-            </div>
-            """,
-                unsafe_allow_html=True,
-            )
-            # st.write(f"🌌 Nearest aurora point:\n- Distance: {distance_km:.1f} km\n- Aurora intensity: {aurora_value}")
-            send_notification(email=email, name=first_name, city=st.session_state.city, aurora_value=aurora_value)
-            st.toast("Subscription saved!", icon="🌟")
-            st.success("Aurora alert sent! Check your email 🌟")
-        else:
-            st.info("Aurora currently below threshold. You'll receive an email when it rises above your set threshold.")
-    else:
-        st.warning("Please enter both city and email.")
+        st.toast("✅ Subscription saved! We'll monitor auroras for you 🌌")
+        st.success("You're subscribed, alerts will be sent automatically!")

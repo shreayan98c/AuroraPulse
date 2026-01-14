@@ -134,5 +134,27 @@ def update_last_alert_sent(sub_id: int, alert_time: datetime):
     logger.info(f"Last alert sent updated for subscription ID {sub_id} at {alert_time.isoformat()}")
 
 
+# Remove a subscription by ID
+def remove_subscription(sub_id: int):
+    """
+    Deletes a subscription from the database by its ID.
+    """
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+
+    # Optional: Check if subscription exists first
+    c.execute("SELECT id, user_email, city FROM subscriptions WHERE id=?", (sub_id,))
+    row = c.fetchone()
+    if not row:
+        logger.warning(f"Attempted to remove non-existent subscription ID {sub_id}")
+        conn.close()
+        return
+
+    c.execute("DELETE FROM subscriptions WHERE id=?", (sub_id,))
+    conn.commit()
+    conn.close()
+    logger.info(f"Removed subscription ID {sub_id} for {row[1]} in {row[2]}")
+
+
 # Initialize DB on module load
 init_db()
