@@ -14,7 +14,7 @@ from src.frontend.style import set_background
 from streamlit_folium import st_folium
 
 st.set_page_config(page_title="Aurora Pulse", page_icon="🌌", layout="centered")
-st.title("Aurora Chaser 🌌")
+st.title("Aurora Pulse 🌌")
 set_background("assets/aurora_bg.jpg")
 
 

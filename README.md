@@ -23,7 +23,7 @@ Aurora Pulse is a **real-time aurora alert system** built with **Streamlit**. Us
   - **Google SSO** for secure authentication.
   - Session management and personalized greetings.
 - **Scalable Architecture Design Decisions**:
-  - **Redis + RQ over APScheduler**:  
+  - **Redis + RQ over APScheduler**: 
     APScheduler runs tasks in-process, which can block the Streamlit app for multiple users. Redis + RQ allows **distributed workers**, retries, and fault tolerance.
   - **Pub/Sub Pattern**: Background worker subscribes to the "aurora" queue, enabling scalable notifications to many users.
   - **Streamlit caching**: Aurora data and map computations are cached for **performance optimization**.
