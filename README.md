@@ -1,8 +1,8 @@
 # 🌌 AuroraPulse
 
-**Catch the aurora before it fades—alerts that keep you in the glow!** 
+**Catch the aurora before it fades - alerts that keep you in the glow!** 
 
-Aurora Pulse is a **real-time aurora alert system** built with **Streamlit**. Users can subscribe to aurora notifications for specific locations and thresholds, and receive alerts via **email** when aurora activity meets their criteria. The app is designed with **scalable architecture**, **pub/sub background processing**, and **geospatial intelligence** for accurate nearest-neighbor aurora calculations. Catch the aurora before it fades—alerts that keep you in the glow!
+Aurora Pulse is a **real-time aurora alert system** built with **Streamlit**. Users can subscribe to aurora notifications for specific locations and thresholds, and receive alerts via **email** when aurora activity meets their criteria. The app is designed with **scalable architecture**, **pub/sub background processing**, and **geospatial intelligence** for accurate nearest-neighbor aurora calculations.
 
 ---
 
