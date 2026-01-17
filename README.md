@@ -6,6 +6,14 @@ Aurora Pulse is a **real-time aurora alert system** built with **Streamlit**. Us
 
 ---
 
+## 🎬 Demo
+
+<iframe width="1071" height="602" src="https://www.youtube.com/embed/EP0qgu7KHCY" title="AuroraPulse: Real-Time Aurora Alerts for Chasing the Northern Lights with Geospatial Intelligence!" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
+**YouTube Link:** https://youtu.be/EP0qgu7KHCY
+
+---
+
 ## ✨ Features
 
 - **Real-time Aurora Data**: Fetches latest aurora oval data from [NOAA Data API](https://www.swpc.noaa.gov/content/data-access) and caches it for efficiency.
