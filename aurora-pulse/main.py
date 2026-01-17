@@ -4,9 +4,10 @@ from geopy.extra.rate_limiter import RateLimiter
 from geopy.geocoders import Nominatim
 from loguru import logger
 from rq import Queue
+from src.backend.config import KP_TO_OVATION
 from src.backend.db import get_all_subscriptions, remove_subscription, save_subscription
 from src.backend.fetch_data import load_aurora_points
-from src.backend.nearest_neighbour import check_threshold, find_nearest_coord
+from src.backend.nearest_neighbour import find_nearest_coord
 from src.backend.notifier import send_notification
 from src.backend.redis_handler.redis_conn import redis_conn
 from src.backend.redis_handler.rq_tasks import check_aurora_alerts
@@ -126,19 +127,39 @@ if st.session_state.coords:
     else:
         st.warning("Unknown Location selected!")
 
-# # If using KP index
-# kp_index = st.slider("Select Aurora Kp Index Threshold", min_value=0, max_value=9, value=5)
-# # Convert Kp to OVATION intensity
-# kp_to_ovation = {0: 1, 1: 2, 2: 4, 3: 6, 4: 9, 5: 12, 6: 14, 7: 17, 8: 19, 9: 20}
-# threshold = kp_to_ovation[kp_index]
+# If using KP index
+kp_index = st.slider(
+    "Select Aurora Kp Index Threshold",
+    min_value=0,
+    max_value=9,
+    value=5,
+    help=(
+        "The Kp Index measures global geomagnetic activity on a scale from 0 to 9.\n\n"
+        "• 0-2: Quiet geomagnetic conditions\n\n"
+        "• 3-4: Minor activity\n\n"
+        "• 5+: Geomagnetic storm (auroras visible farther south)\n\n"
+        "Higher Kp values mean stronger and more widespread auroras."
+    ),
+)
 
-threshold = st.slider("Set aurora intensity threshold:", min_value=0, max_value=20, value=8, step=1)
-if threshold >= 15:
-    st.caption("🔥 High sensitivity: Alerts for intense auroras!")
-elif threshold >= 8:
-    st.caption("🌌 Moderate sensitivity: Alerts for moderate auroras.")
+if kp_index >= 7:
+    st.caption("😍 Strong geomagnetic storm - auroras visible far south!")
+elif kp_index >= 5:
+    st.caption("📸 Moderate storm - auroras likely at high latitudes")
 else:
-    st.caption("✨ Low sensitivity: Alerts for any aurora activity.")
+    st.caption("🔭 Quiet to minor activity - faint auroras possible under dark skies and special equipment")
+
+# Convert Kp to OVATION intensity
+threshold = KP_TO_OVATION[kp_index]
+
+# # If using OVATION intensity
+# threshold = st.slider("Set aurora intensity threshold:", min_value=0, max_value=20, value=8, step=1)
+# if threshold >= 15:
+#     st.caption("😍 Alerts for intense auroras visible with naked eyes!")
+# elif threshold >= 8:
+#     st.caption("📸 Alerts for auroras that can be captured with a camera!")
+# else:
+#     st.caption("🔭 Alerts for faint auroras visible under dark skies and special equipment!")
 
 if st.button("Check Aurora", disabled=not st.session_state.coords):
     if st.session_state.city and email:
@@ -148,7 +169,7 @@ if st.button("Check Aurora", disabled=not st.session_state.coords):
             latitude=st.session_state.coords["lat"],
             longitude=st.session_state.coords["lng"],
             city=st.session_state.city,
-            threshold=threshold,
+            threshold=kp_index,
         )
 
         # Enqueue background job for redis worker

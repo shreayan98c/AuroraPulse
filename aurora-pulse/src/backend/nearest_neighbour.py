@@ -1,6 +1,7 @@
 import numpy as np
 from loguru import logger
 from sklearn.neighbors import BallTree
+from src.backend.config import KP_TO_OVATION
 
 
 def haversine(lat1, lon1, lat2, lon2) -> float:
@@ -62,7 +63,11 @@ def find_nearest_coord(target_coord, coord_list):
 
 
 def check_threshold(aurora_value, threshold):
-    """
-    Returns True if aurora_value exceeds threshold
-    """
     return aurora_value >= threshold
+
+
+def ovation_exceeds_kp(intensity_ovation, kp_threshold):
+    """
+    Check if OVATION intensity meets or exceeds the Kp threshold.
+    """
+    return intensity_ovation >= KP_TO_OVATION[kp_threshold]

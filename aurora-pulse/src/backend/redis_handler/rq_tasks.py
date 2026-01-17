@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 
 from loguru import logger
+from src.backend.config import KP_TO_OVATION
 from src.backend.db import get_all_subscriptions, update_last_alert_sent
 from src.backend.fetch_data import fetch_realtime_aurora_data
 from src.backend.nearest_neighbour import find_nearest_coord
@@ -30,8 +31,14 @@ def check_aurora_alerts():
         nearest_point, _ = find_nearest_coord([sub.latitude, sub.longitude], aurora_data["coordinates"])
 
         intensity = nearest_point[2]
+        kp_threshold = sub.threshold
+        ovation_threshold = KP_TO_OVATION.get(kp_threshold)
+        if ovation_threshold is None:
+            logger.warning(f"Invalid threshold {kp_threshold} for subscription {sub.id}")
+            continue
 
-        if intensity >= sub.threshold:
+        logger.debug(f"Subscription {sub.id}: intensity={intensity}, ovation_threshold={ovation_threshold}")
+        if intensity >= ovation_threshold:
             now = datetime.now()
 
             if sub.last_alert_sent and now - sub.last_alert_sent < MIN_ALERT_GAP:
@@ -41,7 +48,7 @@ def check_aurora_alerts():
                 email=sub.user_email,
                 name=sub.user_name,
                 city=sub.city,
-                aurora_value=intensity,
+                aurora_value=kp_threshold,
             )
 
             update_last_alert_sent(sub.id, now)

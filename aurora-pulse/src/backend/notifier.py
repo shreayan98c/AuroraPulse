@@ -20,12 +20,12 @@ Good news! An aurora event may be visible near {city}.
     html_body = f"""
 <!DOCTYPE html>
 <html>
+
 <body style="background-color:#0b1020;color:#ffffff;font-family:Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0">
     <tr>
       <td align="center">
-        <table width="600" cellpadding="24" cellspacing="0"
-               style="background:#12172b;border-radius:12px;">
+        <table width="600" cellpadding="24" cellspacing="0" style="background:#12172b;border-radius:12px;">
 
           <tr>
             <td>
@@ -40,7 +40,7 @@ Good news! An aurora event may be visible near {city}.
               </p>
 
               <p style="font-size:16px;">
-                ✨ <strong>Aurora Intensity:</strong> {aurora_value}
+                ✨ <strong>Aurora Kp Intensity:</strong> {aurora_value}
               </p>
 
               <div style="background:#1b2140;border-radius:8px;padding:16px;margin-top:20px;">
@@ -48,7 +48,7 @@ Good news! An aurora event may be visible near {city}.
               </div>
 
               <p style="margin-top:30px;color:#9aa4ff;">
-                Clear skies and happy chasing ✨<br/>
+                Clear skies and happy chasing ✨<br />
                 — <strong>Aurora Pulse</strong>
               </p>
             </td>
@@ -59,6 +59,7 @@ Good news! An aurora event may be visible near {city}.
     </tr>
   </table>
 </body>
+
 </html>
 """
     return send_email_notification(email, subject, html_body, text_body)
