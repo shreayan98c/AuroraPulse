@@ -8,7 +8,7 @@ Aurora Pulse is a **real-time aurora alert system** built with **Streamlit**. Us
 
 ## 🎬 Demo
 
-<iframe width="1071" height="602" src="https://www.youtube.com/embed/EP0qgu7KHCY" title="AuroraPulse: Real-Time Aurora Alerts for Chasing the Northern Lights with Geospatial Intelligence!" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+<a href="https://www.youtube.com/embed/EP0qgu7KHCY" target="_blank"><img src="http://img.youtube.com/vi/EP0qgu7KHCY/0.jpg" alt="AuroraPulse" width="1000" height="600"/></a>
 
 **YouTube Link:** https://youtu.be/EP0qgu7KHCY
 
